@@ -15,6 +15,12 @@ import AdminDetails from "./Admin/AdminDetails";
 import AssistantCreate from "./Assistant/AssistantCreate";
 import AssistantList from "./Assistant/AssistantList";
 
+import DeviceList from "./Monitoring/DeviceList";
+import EmployeeList from "./Monitoring/EmployeeList";
+import EmployeeAttendance from "./Monitoring/EmployeeAttendance";
+import AttendanceSync from "./Monitoring/AttendanceSync";
+
+
 const DashboardRouting = () => {
   return (
     <div className="flex w-full">
@@ -55,6 +61,17 @@ const DashboardRouting = () => {
 
 
 
+      {/* Monitoring / Attendance / Devices */}
+      <Route path="/monitor/devices" element={<DeviceList />} />
+      <Route path="/monitor/employees" element={<EmployeeList />} />
+      <Route
+        path="/monitor/employees/:id/attendance"
+        element={<EmployeeAttendance />}
+      />
+      <Route
+        path="/monitor/attendance-sync"
+        element={<AttendanceSync />}
+      />
 
 
 

@@ -16,16 +16,28 @@ import {
 } from "lucide-react";
 
 /* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
+/* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
 const modules = [
   {
     name: "Admin",
     path: "/admin",
     icon: <ShieldCheck className="w-5 h-5" />,
     children: [
-      { name: "Admin List", path: "/admin/list", icon: <Users className="w-4 h-4 text-indigo-300" /> },
-      { name: "Create Admin", path: "/admin/create", icon: <UserPlus className="w-4 h-4 text-indigo-300" /> },
-      { name: "Admin's Permissions", path: "/admin/roles-permissions", icon: <KeyRound className="w-4 h-4 text-indigo-300" /> },
-      // { name: "Admin's Invites", path: "/admin/invites", icon: <MailPlus className="w-4 h-4 text-indigo-300" /> },
+      {
+        name: "Admin List",
+        path: "/admin/list",
+        icon: <Users className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Create Admin",
+        path: "/admin/create",
+        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Admin's Permissions",
+        path: "/admin/roles-permissions",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
     ],
   },
   {
@@ -33,26 +45,64 @@ const modules = [
     path: "/therapist",
     icon: <ShieldCheck className="w-5 h-5" />,
     children: [
-      { name: "Therapist List", path: "/therapist/list", icon: <Users className="w-4 h-4 text-indigo-300" /> },
-      { name: "Create Therapist", path: "/therapist/create", icon: <UserPlus className="w-4 h-4 text-indigo-300" /> },
+      {
+        name: "Therapist List",
+        path: "/therapist/list",
+        icon: <Users className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Create Therapist",
+        path: "/therapist/create",
+        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+      },
     ],
   },
-
-
-    {
+  {
     name: "Assistant",
     path: "/assistant",
     icon: <ShieldCheck className="w-5 h-5" />,
     children: [
-      { name: "Assistant List", path: "/assistant/list", icon: <Users className="w-4 h-4 text-indigo-300" /> },
-      { name: "Create Assistant", path: "/assistant/create", icon: <UserPlus className="w-4 h-4 text-indigo-300" /> },
+      {
+        name: "Assistant List",
+        path: "/assistant/list",
+        icon: <Users className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Create Assistant",
+        path: "/assistant/create",
+        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+      },
     ],
   },
 
+  // 🆕 Monitoring / Attendance / Machines
+  {
+    name: "Monitoring",
+    path: "/monitor",
+    icon: <ShieldCheck className="w-5 h-5" />,
+    children: [
+      {
+        name: "Devices",
+        path: "/monitor/devices",
+        icon: <Users className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Employees",
+        path: "/monitor/employees",
+        icon: <Users className="w-4 h-4 text-indigo-300" />,
+      },
+      {
+        name: "Attendance Sync",
+        path: "/monitor/attendance-sync",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
+    ],
+  },
 
   { name: "Settings", path: "/settingPage", icon: <Settings className="w-5 h-5" /> },
   { name: "Logout", path: "/authentication", icon: <LogOut className="w-5 h-5" /> },
 ];
+
 
 /* ---------- UTIL ---------- */
 const isActive = (location, itemPath) =>
