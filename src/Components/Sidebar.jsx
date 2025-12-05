@@ -18,6 +18,45 @@ import {
 /* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
 /* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
 const modules = [
+
+
+    {
+    name: "Permission Management",
+    path: "/permission",
+    icon: <ShieldCheck className="w-5 h-5" />,
+    children: [
+        {
+        name: "Permissions Master", // Permission CRUD
+        path: "/permissions",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
+      
+
+    ],
+  },
+
+
+
+      {
+    name: "Role Management",
+    path: "/role",
+    icon: <ShieldCheck className="w-5 h-5" />,
+    children: [
+    
+      {
+        name: "Roles Mapping", // Role CRUD
+        path: "/roles",
+        icon: <ShieldCheck className="w-4 h-4 text-indigo-300" />,
+      },
+
+    ],
+  },
+
+
+
+
+
+
   {
     name: "Admin",
     path: "/admin",

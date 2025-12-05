@@ -4,7 +4,7 @@ import { Edit, Trash2, PlusCircle, Key } from "lucide-react";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-export default function RoleManager() {
+export default function RoleManagerOld() {
   const [roles, setRoles] = useState([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [editId, setEditId] = useState(null);

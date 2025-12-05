@@ -6,7 +6,6 @@ import AdminList from "./Admin/AdminList";
 import CreateAdmin from "./Admin/CreateAdmin";
 import AdminPermision from "./Admin/AdminPermision";
 import SubRoleManager from "./Admin/SubRoleManager";
-import RoleManager from "./Admin/RoleManager";
 import SettingPage from "./SettingPage";
 import EditAdmin from "./Admin/EditAdmin";
 import TherapistCreate from "./Therapist/TherapistCreate";
@@ -19,6 +18,8 @@ import DeviceList from "./Monitoring/DeviceList";
 import EmployeeList from "./Monitoring/EmployeeList";
 import EmployeeAttendance from "./Monitoring/EmployeeAttendance";
 import AttendanceSync from "./Monitoring/AttendanceSync";
+import PermissionManager from "./PermissionManager";
+import RoleManager from "./RoleManager";
 
 
 const DashboardRouting = () => {
@@ -28,6 +29,10 @@ const DashboardRouting = () => {
       <Routes>
         <Route path="/" element={<DashboardBase />} />
         <Route path="/dashboard" element={<DashboardBase />} />
+
+
+        <Route path="/permissions" element={<PermissionManager />} />
+<Route path="/roles" element={<RoleManager />} />
 
         <Route path="/admin/create" element={<CreateAdmin />} />
         <Route path="/admin/list" element={<AdminList />} />
