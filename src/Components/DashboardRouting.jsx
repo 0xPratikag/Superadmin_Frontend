@@ -20,6 +20,9 @@ import EmployeeAttendance from "./Monitoring/EmployeeAttendance";
 import AttendanceSync from "./Monitoring/AttendanceSync";
 import PermissionManager from "./PermissionManager";
 import RoleManager from "./RoleManager";
+import BranchList from "./Branch/BranchList";
+import BranchCreate from "./Branch/BranchCreate";
+import BranchEdit from "./Branch/BranchEdit";
 
 
 const DashboardRouting = () => {
@@ -31,8 +34,6 @@ const DashboardRouting = () => {
         <Route path="/dashboard" element={<DashboardBase />} />
 
 
-        <Route path="/permissions" element={<PermissionManager />} />
-<Route path="/roles" element={<RoleManager />} />
 
         <Route path="/admin/create" element={<CreateAdmin />} />
         <Route path="/admin/list" element={<AdminList />} />
@@ -66,6 +67,12 @@ const DashboardRouting = () => {
 
 
 
+
+
+
+
+{/* ******************************** new routings ************************************ */}
+
       {/* Monitoring / Attendance / Devices */}
       <Route path="/monitor/devices" element={<DeviceList />} />
       <Route path="/monitor/employees" element={<EmployeeList />} />
@@ -77,6 +84,15 @@ const DashboardRouting = () => {
         path="/monitor/attendance-sync"
         element={<AttendanceSync />}
       />
+
+        <Route path="/permissions" element={<PermissionManager />} />
+<Route path="/roles" element={<RoleManager />} />
+
+
+<Route path="/branch/list" element={<BranchList />} />
+<Route path="/branch/create" element={<BranchCreate />} />
+<Route path="/branch/edit/:id" element={<BranchEdit />} />
+
 
 
 

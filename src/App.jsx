@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import DashboardRouting from "./Components/DashboardRouting";
 import AuthForm from "./Components/Auth/AuthForm";
 import LoadingModal from "./LoadingModal";
+import BranchDashboardRouting from "./Components/BranchPanel/BranchDashboardRouting";
 
 const RequireAuth = ({ children }) => {
   const token = localStorage.getItem("token");
@@ -34,6 +35,17 @@ const App = () => {
               </RequireAuth>
             }
           />
+
+
+            {/* Branch dashboard – new tab, per branch */}
+  <Route
+    path="/branch-dashboard/:branchId/*"
+    element={
+      <RequireAuth>
+        <BranchDashboardRouting />
+      </RequireAuth>
+    }
+  />
         </Routes>
       </Suspense>
     </>

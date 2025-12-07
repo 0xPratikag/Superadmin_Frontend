@@ -54,65 +54,98 @@ const modules = [
 
 
 
-
-
-
-  {
-    name: "Admin",
-    path: "/admin",
+  
+    {
+    name: "Branch Management",
+    path: "/branch",
     icon: <ShieldCheck className="w-5 h-5" />,
     children: [
-      {
-        name: "Admin List",
-        path: "/admin/list",
-        icon: <Users className="w-4 h-4 text-indigo-300" />,
-      },
-      {
-        name: "Create Admin",
-        path: "/admin/create",
-        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
-      },
-      {
-        name: "Admin's Permissions",
-        path: "/admin/roles-permissions",
+        {
+        name: "Create Branch", // Permission CRUD
+        path: "/branch/create",
         icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
       },
+
+
+              {
+        name: "Branch List", // Permission CRUD
+        path: "/branch/list",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
+
+
+            
+      
+
     ],
   },
-  {
-    name: "Therapist",
-    path: "/therapist",
-    icon: <ShieldCheck className="w-5 h-5" />,
-    children: [
-      {
-        name: "Therapist List",
-        path: "/therapist/list",
-        icon: <Users className="w-4 h-4 text-indigo-300" />,
-      },
-      {
-        name: "Create Therapist",
-        path: "/therapist/create",
-        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
-      },
-    ],
-  },
-  {
-    name: "Assistant",
-    path: "/assistant",
-    icon: <ShieldCheck className="w-5 h-5" />,
-    children: [
-      {
-        name: "Assistant List",
-        path: "/assistant/list",
-        icon: <Users className="w-4 h-4 text-indigo-300" />,
-      },
-      {
-        name: "Create Assistant",
-        path: "/assistant/create",
-        icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
-      },
-    ],
-  },
+
+
+
+
+
+
+
+  // {
+  //   name: "Admin",
+  //   path: "/admin",
+  //   icon: <ShieldCheck className="w-5 h-5" />,
+  //   children: [
+  //     {
+  //       name: "Admin List",
+  //       path: "/admin/list",
+  //       icon: <Users className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //     {
+  //       name: "Create Admin",
+  //       path: "/admin/create",
+  //       icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //     {
+  //       name: "Admin's Permissions",
+  //       path: "/admin/roles-permissions",
+  //       icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //   ],
+  // },
+
+
+  // {
+  //   name: "Therapist",
+  //   path: "/therapist",
+  //   icon: <ShieldCheck className="w-5 h-5" />,
+  //   children: [
+  //     {
+  //       name: "Therapist List",
+  //       path: "/therapist/list",
+  //       icon: <Users className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //     {
+  //       name: "Create Therapist",
+  //       path: "/therapist/create",
+  //       icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //   ],
+  // },
+
+
+  // {
+  //   name: "Assistant",
+  //   path: "/assistant",
+  //   icon: <ShieldCheck className="w-5 h-5" />,
+  //   children: [
+  //     {
+  //       name: "Assistant List",
+  //       path: "/assistant/list",
+  //       icon: <Users className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //     {
+  //       name: "Create Assistant",
+  //       path: "/assistant/create",
+  //       icon: <UserPlus className="w-4 h-4 text-indigo-300" />,
+  //     },
+  //   ],
+  // },
 
   // 🆕 Monitoring / Attendance / Machines
   {
