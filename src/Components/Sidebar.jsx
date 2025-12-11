@@ -42,12 +42,19 @@ const modules = [
     path: "/role",
     icon: <ShieldCheck className="w-5 h-5" />,
     children: [
+
+            {
+        name: "Manage Designation", // Role CRUD
+        path: "/roles/designation/manage",
+        icon: <ShieldCheck className="w-4 h-4 text-indigo-300" />,
+      },
     
       {
         name: "Roles Mapping", // Role CRUD
         path: "/roles",
         icon: <ShieldCheck className="w-4 h-4 text-indigo-300" />,
       },
+
 
     ],
   },
@@ -70,6 +77,33 @@ const modules = [
               {
         name: "Branch List", // Permission CRUD
         path: "/branch/list",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
+
+
+            
+      
+
+    ],
+  },
+
+
+
+      {
+    name: "Employe Management",
+    path: "/employee",
+    icon: <ShieldCheck className="w-5 h-5" />,
+    children: [
+        {
+        name: "Create Employe", // Permission CRUD
+        path: "/employee/create",
+        icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
+      },
+
+
+              {
+        name: "Employe List", // Permission CRUD
+        path: "/employee/list",
         icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
       },
 

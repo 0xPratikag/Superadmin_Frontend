@@ -15,7 +15,7 @@ import AssistantCreate from "./Assistant/AssistantCreate";
 import AssistantList from "./Assistant/AssistantList";
 
 import DeviceList from "./Monitoring/DeviceList";
-import EmployeeList from "./Monitoring/EmployeeList";
+// import EmployeeList from "./Monitoring/EmployeeList";
 import EmployeeAttendance from "./Monitoring/EmployeeAttendance";
 import AttendanceSync from "./Monitoring/AttendanceSync";
 import PermissionManager from "./PermissionManager";
@@ -23,6 +23,10 @@ import RoleManager from "./RoleManager";
 import BranchList from "./Branch/BranchList";
 import BranchCreate from "./Branch/BranchCreate";
 import BranchEdit from "./Branch/BranchEdit";
+import EmployeeList from "./Employee/EmployeeList";
+import EmployeeCreate from "./Employee/EmployeeCreate";
+import EmployeeEdit from "./Employee/EmployeeEdit";
+import DesignationManagement from "./Designation/DesignationManagement";
 
 
 const DashboardRouting = () => {
@@ -88,11 +92,18 @@ const DashboardRouting = () => {
         <Route path="/permissions" element={<PermissionManager />} />
 <Route path="/roles" element={<RoleManager />} />
 
+<Route path="/roles/designation/manage" element={<DesignationManagement />} />
+
 
 <Route path="/branch/list" element={<BranchList />} />
 <Route path="/branch/create" element={<BranchCreate />} />
 <Route path="/branch/edit/:id" element={<BranchEdit />} />
 
+
+
+<Route path="/employee/list" element={<EmployeeList />} />
+<Route path="/employee/create" element={<EmployeeCreate />} />
+<Route path="/employee/edit/:id" element={<EmployeeEdit />} />
 
 
 
