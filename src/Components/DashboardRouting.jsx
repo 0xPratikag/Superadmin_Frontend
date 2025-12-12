@@ -14,10 +14,7 @@ import AdminDetails from "./Admin/AdminDetails";
 import AssistantCreate from "./Assistant/AssistantCreate";
 import AssistantList from "./Assistant/AssistantList";
 
-import DeviceList from "./Monitoring/DeviceList";
 // import EmployeeList from "./Monitoring/EmployeeList";
-import EmployeeAttendance from "./Monitoring/EmployeeAttendance";
-import AttendanceSync from "./Monitoring/AttendanceSync";
 import PermissionManager from "./PermissionManager";
 import RoleManager from "./RoleManager";
 import BranchList from "./Branch/BranchList";
@@ -27,6 +24,9 @@ import EmployeeList from "./Employee/EmployeeList";
 import EmployeeCreate from "./Employee/EmployeeCreate";
 import EmployeeEdit from "./Employee/EmployeeEdit";
 import DesignationManagement from "./Designation/DesignationManagement";
+import AttendanceBranches from "./Monitoring/AttendanceBranches";
+import BranchAttendance from "./Monitoring/BranchAttendance";
+import DeviceList from "./Monitoring/DeviceList";
 
 
 const DashboardRouting = () => {
@@ -77,17 +77,11 @@ const DashboardRouting = () => {
 
 {/* ******************************** new routings ************************************ */}
 
-      {/* Monitoring / Attendance / Devices */}
-      <Route path="/monitor/devices" element={<DeviceList />} />
-      <Route path="/monitor/employees" element={<EmployeeList />} />
-      <Route
-        path="/monitor/employees/:id/attendance"
-        element={<EmployeeAttendance />}
-      />
-      <Route
-        path="/monitor/attendance-sync"
-        element={<AttendanceSync />}
-      />
+<Route path="/monitor/attendance" element={<AttendanceBranches />} />
+<Route path="/monitor/attendance/:branchId" element={<BranchAttendance />} />
+<Route path="/monitor/devices" element={<DeviceList />} />
+
+    
 
         <Route path="/permissions" element={<PermissionManager />} />
 <Route path="/roles" element={<RoleManager />} />

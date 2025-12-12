@@ -193,13 +193,8 @@ const modules = [
         icon: <Users className="w-4 h-4 text-indigo-300" />,
       },
       {
-        name: "Employees",
-        path: "/monitor/employees",
-        icon: <Users className="w-4 h-4 text-indigo-300" />,
-      },
-      {
-        name: "Attendance Sync",
-        path: "/monitor/attendance-sync",
+        name: "Attendance",
+       path: "/monitor/attendance",
         icon: <KeyRound className="w-4 h-4 text-indigo-300" />,
       },
     ],
