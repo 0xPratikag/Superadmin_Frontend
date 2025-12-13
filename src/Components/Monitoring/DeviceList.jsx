@@ -132,9 +132,7 @@ export default function DeviceList() {
   const [commands, setCommands] = useState([]);
 
   const selectedSerials = useMemo(() => {
-    return (selectedRows || [])
-      .map((r) => r.serialNumber)
-      .filter(Boolean);
+    return (selectedRows || []).map((r) => r.serialNumber).filter(Boolean);
   }, [selectedRows]);
 
   const fetchBranches = async () => {
@@ -439,7 +437,9 @@ export default function DeviceList() {
     {
       name: "Last Log",
       cell: (row) => (
-        <span className="text-[13px] text-slate-700">{fmt(row.lastLogTime)}</span>
+        <span className="text-[13px] text-slate-700">
+          {fmt(row.lastLogTime)}
+        </span>
       ),
       minWidth: "190px",
     },
@@ -534,17 +534,18 @@ export default function DeviceList() {
           <div>
             <h1 className="text-2xl font-bold text-slate-900">Devices</h1>
             <p className="text-sm text-slate-500">
-              Sync devices from iDMS, refresh status, assign branch & run commands.
+              Sync devices from iDMS, refresh status, assign branch & run
+              commands.
             </p>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
+            {/* <button
               onClick={syncFromIdms}
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700"
             >
               <DownloadCloud className="h-4 w-4" /> Sync from iDMS
-            </button>
+            </button> */}
             <button
               onClick={refreshStatus}
               className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800"
@@ -552,44 +553,45 @@ export default function DeviceList() {
               <RefreshCcw className="h-4 w-4" /> Refresh Status
             </button>
 
-            <button
+            {/* <button
               onClick={() => openPullLogs(null)}
               className="inline-flex items-center gap-2 rounded-xl bg-indigo-50 px-4 py-2.5 text-sm font-semibold text-indigo-700 border border-indigo-100 hover:bg-indigo-100"
               title="Pull logs for selected devices"
             >
               <FileText className="h-4 w-4" /> Pull Logs
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={() => openSyncTime(null)}
               className="inline-flex items-center gap-2 rounded-xl bg-sky-50 px-4 py-2.5 text-sm font-semibold text-sky-700 border border-sky-100 hover:bg-sky-100"
               title="Sync time for selected devices"
             >
               <Clock3 className="h-4 w-4" /> Sync Time
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={openCommands}
               className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50"
               title="View device commands"
             >
               <TerminalSquare className="h-4 w-4" /> Commands
-            </button>
+            </button> */}
 
-            <button
+            {/* <button
               onClick={viewIdmsRawList}
               className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 border border-slate-200 hover:bg-slate-50"
               title="View full iDMS raw device list"
             >
               <RotateCw className="h-4 w-4" /> iDMS Raw
-            </button>
+            </button> */}
           </div>
         </div>
 
         {/* Stats */}
         <div className="flex flex-wrap items-center gap-2">
           <Pill>
-            Total: <span className="ml-1 font-semibold text-slate-900">{total}</span>
+            Total:{" "}
+            <span className="ml-1 font-semibold text-slate-900">{total}</span>
           </Pill>
           <Pill>
             Selected:{" "}
@@ -686,17 +688,25 @@ export default function DeviceList() {
             pointerOnHover
             customStyles={customStyles}
             selectableRows
-            onSelectedRowsChange={({ selectedRows }) => setSelectedRows(selectedRows)}
+            onSelectedRowsChange={({ selectedRows }) =>
+              setSelectedRows(selectedRows)
+            }
             clearSelectedRows={false}
             noDataComponent={
-              <div className="py-10 text-sm text-slate-500">No devices found.</div>
+              <div className="py-10 text-sm text-slate-500">
+                No devices found.
+              </div>
             }
           />
         </div>
       </div>
 
       {/* Row Raw Modal */}
-      <Modal open={rawOpen} title="Raw Device Payload" onClose={() => setRawOpen(false)}>
+      <Modal
+        open={rawOpen}
+        title="Raw Device Payload"
+        onClose={() => setRawOpen(false)}
+      >
         <pre className="max-h-[60vh] overflow-auto rounded-xl bg-slate-950 p-4 text-xs text-slate-100">
           {JSON.stringify(rawData, null, 2)}
         </pre>
@@ -803,7 +813,11 @@ export default function DeviceList() {
                 onClick={submitPullLogs}
                 className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 disabled:opacity-60"
               >
-                {pullBusy ? <RotateCw className="h-4 w-4 animate-spin" /> : <FileText className="h-4 w-4" />}
+                {pullBusy ? (
+                  <RotateCw className="h-4 w-4 animate-spin" />
+                ) : (
+                  <FileText className="h-4 w-4" />
+                )}
                 Send Command
               </button>
             </div>
@@ -817,7 +831,8 @@ export default function DeviceList() {
               {"{ serialNumbers: [...], from, to }"}
             </div>
             <div className="mt-1 text-[11px] text-slate-500">
-              (Agar backend keys different hain to payload keys rename kar dena.)
+              (Agar backend keys different hain to payload keys rename kar
+              dena.)
             </div>
           </div>
 
@@ -980,7 +995,8 @@ export default function DeviceList() {
       >
         <div className="space-y-3">
           <div className="text-sm text-slate-600">
-            Here you can monitor commands sent to devices (pull logs / sync time etc).
+            Here you can monitor commands sent to devices (pull logs / sync time
+            etc).
           </div>
 
           <div className="rounded-2xl border border-slate-200 overflow-hidden">
@@ -1005,7 +1021,7 @@ export default function DeviceList() {
                           {fmt(c.createdAt || c.created_on)}
                         </td>
                         <td className="px-3 py-2">
-_toggle:{/* */}
+                          _toggle:{/* */}
                           <span className="font-semibold text-slate-800">
                             {c.type || c.commandType || c.action || "—"}
                           </span>
@@ -1014,7 +1030,8 @@ _toggle:{/* */}
                           {(c.serialNumbers || c.devices || c.deviceIds || [])
                             .slice(0, 3)
                             .join(", ")}
-                          {(c.serialNumbers || c.devices || c.deviceIds || []).length > 3
+                          {(c.serialNumbers || c.devices || c.deviceIds || [])
+                            .length > 3
                             ? " …"
                             : ""}
                         </td>
@@ -1025,7 +1042,10 @@ _toggle:{/* */}
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="px-3 py-8 text-center text-slate-500">
+                      <td
+                        colSpan={4}
+                        className="px-3 py-8 text-center text-slate-500"
+                      >
                         No commands found.
                       </td>
                     </tr>
