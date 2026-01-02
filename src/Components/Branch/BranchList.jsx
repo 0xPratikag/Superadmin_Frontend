@@ -1,34 +1,28 @@
 import React, { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import DataTable from "react-data-table-component";
-import {
-  Edit3,
-  Trash2,
-  Plus,
-  Building2,
-  ExternalLink,
-} from "lucide-react";
+import { Edit3, Trash2, Plus, Building2, ExternalLink } from "lucide-react";
 import { toast } from "react-toastify";
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
-// Optional: If you have a separate branch dashboard URL, set it in .env
-// VITE_BRANCH_DASHBOARD_BASE_URL="https://branch-app.example.com"
-const BRANCH_DASHBOARD_BASE_URL =
-  import.meta.env.VITE_BRANCH_DASHBOARD_BASE_URL ||
-  `${window.location.origin}/branch-dashboard`;
+// Branch App base url (where /authentication exists)
+const BRANCH_DASHBOARD_BASE_URL = import.meta.env.VITE_BRANCH_DASHBOARD_BASE_URL;
 
 export default function BranchList() {
   const [branches, setBranches] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [openingId, setOpeningId] = useState(null); // which branch is opening (for UI disable)
   const [filterText, setFilterText] = useState("");
 
   const token = localStorage.getItem("token");
 
-  const axiosAuth = axios.create({
-    baseURL: API_BASE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const axiosAuth = useMemo(() => {
+    return axios.create({
+      baseURL: API_BASE,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }, [token]);
 
   const fetchBranches = async () => {
     setLoading(true);
@@ -56,10 +50,39 @@ export default function BranchList() {
     }
   };
 
-  // Open branch dashboard in a new tab
-  const openBranchDashboard = (branch) => {
-    const url = `${BRANCH_DASHBOARD_BASE_URL}/${branch._id}`;
-    window.open(url, "_blank", "noopener,noreferrer");
+  /**
+   * ✅ NEW: Open branch dashboard in a new tab with auto-login (SSO)
+   * Flow:
+   *  1) Call backend: POST /branch-sso/create { branchId }
+   *  2) Backend returns { url } => https://branch-app.../authentication?sso=RAW
+   *  3) window.open(url)
+   */
+  const openBranchDashboard = async (branch) => {
+    try {
+      if (!BRANCH_DASHBOARD_BASE_URL) {
+        toast.error("Branch dashboard base URL is missing (VITE_BRANCH_DASHBOARD_BASE_URL)");
+        return;
+      }
+
+      setOpeningId(branch._id);
+
+      const res = await axiosAuth.post("/branch-sso/create", {
+        branchId: branch._id,
+      });
+
+      const { url } = res.data || {};
+      if (!url) {
+        toast.error("SSO URL not received from server");
+        return;
+      }
+
+      window.open(url, "_blank", "noopener,noreferrer");
+    } catch (err) {
+      console.error(err);
+      toast.error(err?.response?.data?.message || "Failed to open branch dashboard");
+    } finally {
+      setOpeningId(null);
+    }
   };
 
   const filteredBranches = useMemo(() => {
@@ -95,9 +118,7 @@ export default function BranchList() {
             <span className="text-[13px] font-semibold text-slate-900">
               {row.Branch_name}
             </span>
-            <span className="text-[11px] text-slate-500">
-              {row.branch_email}
-            </span>
+            <span className="text-[11px] text-slate-500">{row.branch_email}</span>
           </div>
         </div>
       ),
@@ -108,9 +129,7 @@ export default function BranchList() {
       sortable: true,
       wrap: true,
       cell: (row) => (
-        <span className="text-[13px] text-slate-700">
-          {row.branch_phone || "—"}
-        </span>
+        <span className="text-[13px] text-slate-700">{row.branch_phone || "—"}</span>
       ),
     },
     {
@@ -142,8 +161,7 @@ export default function BranchList() {
       cell: (row) => (
         <div className="flex flex-col text-[11px] text-slate-500">
           <span>
-            <span className="font-medium text-slate-600">IP:</span>{" "}
-            {row.branch_ip || "—"}
+            <span className="font-medium text-slate-600">IP:</span> {row.branch_ip || "—"}
           </span>
           <span>
             <span className="font-medium text-slate-600">Cloud ID:</span>{" "}
@@ -156,52 +174,56 @@ export default function BranchList() {
       name: "Actions",
       right: true,
       minWidth: "150px",
-      cell: (row) => (
-        <div className="flex items-center justify-end gap-2">
-          {/* Open dashboard (new tab) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation(); // prevent row click
-              openBranchDashboard(row);
-            }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-sky-100 text-sky-700 hover:bg-sky-200"
-            title="Open Branch Dashboard"
-          >
-            <ExternalLink className="h-4 w-4" />
-          </button>
+      cell: (row) => {
+        const isOpening = openingId === row._id;
+        return (
+          <div className="flex items-center justify-end gap-2">
+            {/* ✅ Open dashboard (new tab with SSO) */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                openBranchDashboard(row);
+              }}
+              disabled={isOpening}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full ${
+                isOpening
+                  ? "bg-slate-200 text-slate-500 cursor-not-allowed"
+                  : "bg-sky-100 text-sky-700 hover:bg-sky-200"
+              }`}
+              title={isOpening ? "Opening..." : "Open Branch Dashboard"}
+            >
+              <ExternalLink className="h-4 w-4" />
+            </button>
 
-          {/* Edit */}
-          <a
-            href={`/branch/edit/${row._id}`}
-            onClick={(e) => e.stopPropagation()}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200"
-            title="Edit branch"
-          >
-            <Edit3 className="h-4 w-4" />
-          </a>
+            {/* Edit */}
+            <a
+              href={`/branch/edit/${row._id}`}
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200"
+              title="Edit branch"
+            >
+              <Edit3 className="h-4 w-4" />
+            </a>
 
-          {/* Delete */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(row._id);
-            }}
-            className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200"
-            title="Delete branch"
-          >
-            <Trash2 className="h-4 w-4" />
-          </button>
-        </div>
-      ),
+            {/* Delete */}
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDelete(row._id);
+              }}
+              className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200"
+              title="Delete branch"
+            >
+              <Trash2 className="h-4 w-4" />
+            </button>
+          </div>
+        );
+      },
     },
   ];
 
   const customStyles = {
-    table: {
-      style: {
-        backgroundColor: "transparent",
-      },
-    },
+    table: { style: { backgroundColor: "transparent" } },
     headRow: {
       style: {
         backgroundColor: "#f8fafc",
@@ -232,12 +254,7 @@ export default function BranchList() {
         transition: "background-color 0.15s ease",
       },
     },
-    pagination: {
-      style: {
-        borderTopWidth: "1px",
-        borderTopColor: "#e5e7eb",
-      },
-    },
+    pagination: { style: { borderTopWidth: "1px", borderTopColor: "#e5e7eb" } },
   };
 
   return (
@@ -269,16 +286,11 @@ export default function BranchList() {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="flex flex-wrap gap-2 text-xs">
             <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-600 shadow-sm border border-slate-200">
-              Total:{" "}
-              <span className="font-semibold text-slate-900">
-                {branches.length}
-              </span>
+              Total: <span className="font-semibold text-slate-900">{branches.length}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-emerald-700 shadow-sm border border-emerald-100">
               Active:{" "}
-              <span className="font-semibold">
-                {branches.filter((b) => b.isActive).length}
-              </span>
+              <span className="font-semibold">{branches.filter((b) => b.isActive).length}</span>
             </span>
           </div>
 
@@ -301,7 +313,7 @@ export default function BranchList() {
             highlightOnHover
             pointerOnHover
             customStyles={customStyles}
-            onRowClicked={openBranchDashboard} // 👈 click row → open dashboard in new tab
+            onRowClicked={openBranchDashboard} // 👈 row click → new tab SSO
             noDataComponent={
               <div className="py-8 text-sm text-slate-500">
                 No branches found. Create one using the button above.

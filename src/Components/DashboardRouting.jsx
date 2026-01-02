@@ -27,6 +27,7 @@ import DesignationManagement from "./Designation/DesignationManagement";
 import AttendanceBranches from "./Monitoring/AttendanceBranches";
 import BranchAttendance from "./Monitoring/BranchAttendance";
 import DeviceList from "./Monitoring/DeviceList";
+import PaymentMethods from "./PaymentMethods";
 
 
 const DashboardRouting = () => {
@@ -99,7 +100,7 @@ const DashboardRouting = () => {
 <Route path="/employee/create" element={<EmployeeCreate />} />
 <Route path="/employee/edit/:id" element={<EmployeeEdit />} />
 
-
+<Route path="/payment-methods" element={<PaymentMethods />} />
 
       </Routes>
     </div>

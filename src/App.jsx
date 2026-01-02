@@ -35,7 +35,7 @@ const App = () => {
               </RequireAuth>
             }
           />
-
+{/*  */}
 
             {/* Branch dashboard – new tab, per branch */}
   <Route

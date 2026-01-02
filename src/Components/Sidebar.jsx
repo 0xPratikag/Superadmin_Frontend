@@ -199,7 +199,7 @@ const modules = [
       },
     ],
   },
-
+ { name: "Payment Method", path: "/payment-methods", icon: <Settings className="w-5 h-5" /> },
   { name: "Settings", path: "/settingPage", icon: <Settings className="w-5 h-5" /> },
   { name: "Logout", path: "/authentication", icon: <LogOut className="w-5 h-5" /> },
 ];
