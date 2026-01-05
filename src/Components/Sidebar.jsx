@@ -13,6 +13,7 @@ import {
   ChevronRight,
   Search,
   X,
+  Stethoscope,
 } from "lucide-react";
 
 /* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
@@ -86,6 +87,22 @@ const modules = [
 
     ],
   },
+
+
+  {
+      key: "catalog",
+      name: "Catalog",
+      path: "/",
+      icon: <Stethoscope className="w-5 h-5" />,
+      children: [
+        {
+          key: "therapy_catalog",
+          name: "Therapy Catalog",
+          path: "/therapy-catalog",
+          icon: <Stethoscope className="w-4 h-4" />,
+        },
+      ],
+    },
 
 
 
