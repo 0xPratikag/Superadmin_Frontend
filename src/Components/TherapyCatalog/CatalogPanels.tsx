@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 import {
   Plus,
@@ -17,6 +17,8 @@ import {
   List,
   Activity,
   ChevronDown,
+  Percent,
+  Layers,
 } from "lucide-react";
 
 /* -------------------------------------------------------------------------
@@ -30,9 +32,53 @@ api.interceptors.request.use((config) => {
 });
 
 /* -------------------------------------------------------------------------
+   Types
+---------------------------------------------------------------------------*/
+type Id = string;
+
+type Therapy = {
+  _id: Id;
+  name: string;
+  description?: string;
+  isActive?: boolean;
+};
+
+type DiscountSlab = {
+  min_sessions?: number;
+  max_sessions?: number;
+  discount_percent?: number;
+  isActive: boolean;
+};
+
+type DiscountSlabDraft = {
+  min_sessions: string;
+  max_sessions: string;
+  discount_percent: string;
+  isActive: boolean;
+};
+
+type SubTherapy = {
+  _id: Id;
+  name: string;
+  duration_mins?: number;
+  price_per_session?: number;
+  notes?: string;
+  isActive?: boolean;
+  discountSlabs?: DiscountSlab[];
+};
+
+type TestItem = {
+  _id: Id;
+  name: string;
+  duration_mins?: number;
+  price_per_test?: number;
+  isActive?: boolean;
+};
+
+/* -------------------------------------------------------------------------
    Tiny UI primitives
 ---------------------------------------------------------------------------*/
-function Badge({ active }) {
+function Badge({ active }: { active: boolean }) {
   return (
     <span
       className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-bold transition-all duration-300 ${
@@ -41,15 +87,27 @@ function Badge({ active }) {
           : "bg-gray-400 text-white shadow-sm shadow-gray-200"
       }`}
     >
-      {active ? <CheckCircle2 className="w-3 h-3" /> : <XCircle className="w-3 h-3" />}
+      {active ? (
+        <CheckCircle2 className="w-3 h-3" />
+      ) : (
+        <XCircle className="w-3 h-3" />
+      )}
       {active ? "Active" : "Inactive"}
     </span>
   );
 }
 
-function Card({ children, className = "", hover = true }) {
+function Card({
+  children,
+  className = "",
+  hover = true,
+  ...rest
+}: React.HTMLAttributes<HTMLDivElement> & {
+  hover?: boolean;
+}) {
   return (
     <div
+      {...rest}
       className={`bg-white rounded-2xl border border-gray-100 shadow-sm transition-all duration-300 ${
         hover ? "hover:shadow-lg hover:border-gray-200" : ""
       } ${className}`}
@@ -59,7 +117,23 @@ function Card({ children, className = "", hover = true }) {
   );
 }
 
-function Input({ label, value, onChange, type = "text", placeholder, min, icon }) {
+function Input({
+  label,
+  value,
+  onChange,
+  type = "text",
+  placeholder,
+  min,
+  icon,
+}: {
+  label?: string;
+  value: any;
+  onChange: (v: string) => void;
+  type?: string;
+  placeholder?: string;
+  min?: number;
+  icon?: React.ReactNode;
+}) {
   return (
     <div className="space-y-1.5">
       {label && (
@@ -69,7 +143,9 @@ function Input({ label, value, onChange, type = "text", placeholder, min, icon }
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{icon}</div>
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+            {icon}
+          </div>
         )}
         <input
           type={type}
@@ -86,7 +162,7 @@ function Input({ label, value, onChange, type = "text", placeholder, min, icon }
   );
 }
 
-function NumberInput(props) {
+function NumberInput(props: any) {
   return <Input {...props} type="number" />;
 }
 
@@ -99,17 +175,33 @@ export function Button({
   size = "md",
   type = "button",
   disabled,
+}: {
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
+  children: React.ReactNode;
+  variant?: "primary" | "success" | "danger" | "secondary" | "outline";
+  className?: string;
+  icon?: React.ReactNode;
+  size?: "sm" | "md" | "lg";
+  type?: "button" | "submit";
+  disabled?: boolean;
 }) {
   const variants = {
-    primary: "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 hover:shadow-lg",
+    primary:
+      "bg-blue-600 hover:bg-blue-700 text-white shadow-md shadow-blue-200 hover:shadow-lg",
     success:
       "bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-200 hover:shadow-lg",
-    danger: "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200 hover:shadow-lg",
+    danger:
+      "bg-rose-600 hover:bg-rose-700 text-white shadow-md shadow-rose-200 hover:shadow-lg",
     secondary: "bg-gray-200 hover:bg-gray-300 text-gray-800 shadow-sm",
-    outline: "bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300",
+    outline:
+      "bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-200 hover:border-gray-300",
   };
 
-  const sizes = { sm: "px-3 py-1.5 text-xs", md: "px-4 py-2.5 text-sm", lg: "px-6 py-3 text-base" };
+  const sizes = {
+    sm: "px-3 py-1.5 text-xs",
+    md: "px-4 py-2.5 text-sm",
+    lg: "px-6 py-3 text-base",
+  };
 
   return (
     <button
@@ -126,10 +218,26 @@ export function Button({
   );
 }
 
-function Toggle({ checked, onChange, label }) {
+function Toggle({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (v: boolean) => void;
+  label?: string;
+}) {
   return (
-    <button type="button" onClick={() => onChange(!checked)} className="flex items-center gap-3 group">
-      <div className={`w-14 h-8 rounded-full relative transition-all duration-300 ${checked ? "bg-emerald-500" : "bg-gray-300"}`}>
+    <button
+      type="button"
+      onClick={() => onChange(!checked)}
+      className="flex items-center gap-3 group"
+    >
+      <div
+        className={`w-14 h-8 rounded-full relative transition-all duration-300 ${
+          checked ? "bg-emerald-500" : "bg-gray-300"
+        }`}
+      >
         <span
           className={`absolute top-1 left-1 w-6 h-6 bg-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center ${
             checked ? "translate-x-6" : "translate-x-0"
@@ -146,8 +254,16 @@ function Toggle({ checked, onChange, label }) {
 /* -------------------------------------------------------------------------
    NEW: TherapySelector component (dropdown to select therapy)
 ---------------------------------------------------------------------------*/
-function TherapySelector({ selectedTherapyId, onSelectTherapy, label = "Select Therapy" }) {
-  const [therapies, setTherapies] = useState([]);
+function TherapySelector({
+  selectedTherapyId,
+  onSelectTherapy,
+  label = "Select Therapy",
+}: {
+  selectedTherapyId: string | null;
+  onSelectTherapy: (id: string | null) => void;
+  label?: string;
+}) {
+  const [therapies, setTherapies] = useState<Therapy[]>([]);
   const [loading, setLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -218,32 +334,225 @@ function TherapySelector({ selectedTherapyId, onSelectTherapy, label = "Select T
 }
 
 // helper to coerce numbers safely
-const num = (v) => (v === "" || v == null ? undefined : Number(v));
+const num = (v: any) => (v === "" || v == null ? undefined : Number(v));
+
+/* -------------------------------------------------------------------------
+   NEW: Discount Slabs Editor (Sub-therapy pricing slabs)
+---------------------------------------------------------------------------*/
+function toDraftSlabs(slabs?: DiscountSlab[]): DiscountSlabDraft[] {
+  if (!slabs || !Array.isArray(slabs)) return [];
+  return slabs.map((s) => ({
+    min_sessions: s.min_sessions == null ? "" : String(s.min_sessions),
+    max_sessions: s.max_sessions == null ? "" : String(s.max_sessions),
+    discount_percent: s.discount_percent == null ? "" : String(s.discount_percent),
+    isActive: !!s.isActive,
+  }));
+}
+
+function sanitizeSlabs(drafts: DiscountSlabDraft[]): DiscountSlab[] {
+  // keep only rows where all 3 numbers are present & valid
+  return drafts
+    .map((d) => ({
+      min_sessions: num(d.min_sessions),
+      max_sessions: num(d.max_sessions),
+      discount_percent: num(d.discount_percent),
+      isActive: !!d.isActive,
+    }))
+    .filter(
+      (d) =>
+        d.min_sessions != null &&
+        d.max_sessions != null &&
+        d.discount_percent != null &&
+        d.min_sessions >= 1 &&
+        d.max_sessions >= 1 &&
+        d.min_sessions <= d.max_sessions &&
+        d.discount_percent >= 0 &&
+        d.discount_percent <= 100
+    );
+}
+
+function slabError(d: DiscountSlabDraft): string | null {
+  const minS = num(d.min_sessions);
+  const maxS = num(d.max_sessions);
+  const pct = num(d.discount_percent);
+
+  // allow empty row while typing (no error)
+  const allEmpty = d.min_sessions === "" && d.max_sessions === "" && d.discount_percent === "";
+  if (allEmpty) return null;
+
+  if (minS == null || maxS == null || pct == null) return "Fill min, max & discount.";
+  if (minS < 1 || maxS < 1) return "Min/Max must be >= 1.";
+  if (minS > maxS) return "Min cannot be greater than Max.";
+  if (pct < 0 || pct > 100) return "Discount must be 0–100.";
+  return null;
+}
+
+function DiscountSlabsEditor({
+  slabs,
+  setSlabs,
+}: {
+  slabs: DiscountSlabDraft[];
+  setSlabs: React.Dispatch<React.SetStateAction<DiscountSlabDraft[]>>;
+}) {
+  const hasAny = slabs.length > 0;
+
+  const addRow = () => {
+    setSlabs((prev) => [
+      ...prev,
+      { min_sessions: "", max_sessions: "", discount_percent: "", isActive: true },
+    ]);
+  };
+
+  const removeRow = (idx: number) => {
+    setSlabs((prev) => prev.filter((_, i) => i !== idx));
+  };
+
+  const updateRow = (idx: number, patch: Partial<DiscountSlabDraft>) => {
+    setSlabs((prev) => prev.map((r, i) => (i === idx ? { ...r, ...patch } : r)));
+  };
+
+  const errorsCount = useMemo(
+    () => slabs.reduce((acc, r) => acc + (slabError(r) ? 1 : 0), 0),
+    [slabs]
+  );
+
+  return (
+    <Card className="p-5 border-2 border-indigo-100 bg-gradient-to-br from-indigo-50/50 to-white" hover={false}>
+      <div className="flex items-start justify-between gap-3 mb-4">
+        <div>
+          <h4 className="text-sm font-extrabold text-gray-900 flex items-center gap-2">
+            <Layers className="w-4 h-4 text-indigo-600" />
+            Discount Slabs (Sessions → % Off)
+          </h4>
+          <p className="text-xs text-gray-600 mt-1">
+            Example: min=5, max=9, discount=10% ⇒ 5–9 sessions get 10% discount.
+          </p>
+        </div>
+
+        <Button
+          onClick={addRow}
+          variant="outline"
+          size="sm"
+          icon={<Plus className="w-4 h-4" />}
+        >
+          Add Slab
+        </Button>
+      </div>
+
+      {!hasAny ? (
+        <div className="rounded-xl border border-dashed border-gray-300 bg-white p-5 text-center text-sm text-gray-600">
+          No slabs added yet.
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {slabs.map((row, idx) => {
+            const err = slabError(row);
+            return (
+              <div key={idx} className="rounded-2xl border border-gray-200 bg-white p-4">
+                <div className="grid grid-cols-1 md:grid-cols-12 gap-3 items-end">
+                  <div className="md:col-span-3">
+                    <NumberInput
+                      label="Min Sessions"
+                      value={row.min_sessions}
+                      onChange={(v: string) => updateRow(idx, { min_sessions: v })}
+                      min={1}
+                      icon={<Timer className="w-4 h-4" />}
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <NumberInput
+                      label="Max Sessions"
+                      value={row.max_sessions}
+                      onChange={(v: string) => updateRow(idx, { max_sessions: v })}
+                      min={1}
+                      icon={<Timer className="w-4 h-4" />}
+                    />
+                  </div>
+                  <div className="md:col-span-3">
+                    <NumberInput
+                      label="Discount %"
+                      value={row.discount_percent}
+                      onChange={(v: string) => updateRow(idx, { discount_percent: v })}
+                      min={0}
+                      icon={<Percent className="w-4 h-4" />}
+                      placeholder="0 - 100"
+                    />
+                  </div>
+
+                  <div className="md:col-span-2 flex items-center gap-3">
+                    <Toggle
+                      checked={row.isActive}
+                      onChange={(v) => updateRow(idx, { isActive: v })}
+                      label="Active"
+                    />
+                  </div>
+
+                  <div className="md:col-span-1 flex justify-end">
+                    <Button
+                      onClick={() => removeRow(idx)}
+                      variant="danger"
+                      size="sm"
+                      icon={<Trash2 className="w-4 h-4" />}
+                    >
+                      Del
+                    </Button>
+                  </div>
+                </div>
+
+                {err && (
+                  <div className="mt-3 text-xs font-bold text-rose-600">
+                    {err}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {hasAny && (
+        <div className="mt-4 flex items-center justify-between">
+          <div className="text-xs text-gray-600">
+            Valid slabs will be saved. Invalid rows are ignored.
+          </div>
+          <div className={`text-xs font-extrabold ${errorsCount ? "text-rose-600" : "text-emerald-600"}`}>
+            {errorsCount ? `${errorsCount} row(s) have issues` : "All good"}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
 
 /* ========================================================================
    CHILD VIEW: TherapiesView (CRUD + select therapy via card/row click)
 ==========================================================================*/
-function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
-  const [items, setItems] = useState([]);
+function TherapiesView({
+  selectedTherapyId,
+  onSelectTherapy,
+}: {
+  selectedTherapyId: string | null;
+  onSelectTherapy: (id: string | null) => void;
+}) {
+  const [items, setItems] = useState<Therapy[]>([]);
   const [loading, setLoading] = useState(false);
   const [q, setQ] = useState("");
   const [form, setForm] = useState({ name: "", description: "", isActive: true });
-  const [editing, setEditing] = useState(null);
-  const [viewMode, setViewMode] = useState("grid"); // "grid" | "list"
+  const [editing, setEditing] = useState<string | null>(null);
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const fetchItems = async (signal) => {
+  const fetchItems = async (signal?: AbortSignal) => {
     setLoading(true);
     try {
       const res = await api.get(`/therapies`, { params: { q, limit: 100 }, signal });
       setItems(res.data.items || []);
-    } catch (e) {
+    } catch (e: any) {
       if (e?.name !== "CanceledError") console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  // debounce + abort stale requests on search
   useEffect(() => {
     const ctl = new AbortController();
     const id = setTimeout(() => fetchItems(ctl.signal), 250);
@@ -273,32 +582,30 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
     fetchItems();
   };
 
-  const deleteItem = async (id) => {
+  const deleteItem = async (id: string) => {
     if (!window.confirm("Delete therapy? This may remove its children (if forced).")) return;
     await api.delete(`/therapies/${id}`, { params: { force: true } });
     if (selectedTherapyId === id) onSelectTherapy(null);
     fetchItems();
   };
 
-  const toggleActive = async (id) => {
-    // optimistic
+  const toggleActive = async (id: string) => {
     setItems((prev) => prev.map((x) => (x._id === id ? { ...x, isActive: !x.isActive } : x)));
     try {
       await api.patch(`/therapies/${id}/toggle`);
     } catch (e) {
       console.error(e);
-      fetchItems(); // rollback
+      fetchItems();
     }
   };
 
-  const startEdit = (it) => {
+  const startEdit = (it: Therapy) => {
     setEditing(it._id);
     setForm({ name: it.name, description: it.description || "", isActive: !!it.isActive });
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Bar */}
       <Card className="p-4">
         <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
           <div className="flex items-center gap-3 flex-1 w-full">
@@ -308,7 +615,11 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
               placeholder="Search therapies..."
               icon={<Search className="w-4 h-4" />}
             />
-            <Button onClick={() => fetchItems()} variant="outline" icon={<RefreshCw className="w-4 h-4" />}>
+            <Button
+              onClick={() => fetchItems()}
+              variant="outline"
+              icon={<RefreshCw className="w-4 h-4" />}
+            >
               Refresh
             </Button>
           </div>
@@ -335,7 +646,6 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
         </div>
       </Card>
 
-      {/* Create/Edit Form */}
       <Card className="p-6 border-2 border-blue-100 bg-gradient-to-br from-blue-50/50 to-white">
         <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
           <Plus className="w-5 h-5" />
@@ -384,7 +694,6 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
         </div>
       </Card>
 
-      {/* Items Grid/List (click to select therapy; no Select button) */}
       {loading ? (
         <div className="flex flex-col items-center justify-center py-20" aria-busy>
           <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
@@ -423,13 +732,36 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
                 {it.description || "No description"}
               </p>
               <div className="flex gap-2 flex-wrap">
-                <Button onClick={(e) => { e.stopPropagation(); toggleActive(it._id); }} variant="secondary" size="sm">
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    toggleActive(it._id);
+                  }}
+                  variant="secondary"
+                  size="sm"
+                >
                   Toggle
                 </Button>
-                <Button onClick={(e) => { e.stopPropagation(); startEdit(it); }} variant="outline" size="sm" icon={<Pencil className="w-3 h-3" />}>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    startEdit(it);
+                  }}
+                  variant="outline"
+                  size="sm"
+                  icon={<Pencil className="w-3 h-3" />}
+                >
                   Edit
                 </Button>
-                <Button onClick={(e) => { e.stopPropagation(); deleteItem(it._id); }} variant="danger" size="sm" icon={<Trash2 className="w-3 h-3" />}>
+                <Button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    deleteItem(it._id);
+                  }}
+                  variant="danger"
+                  size="sm"
+                  icon={<Trash2 className="w-3 h-3" />}
+                >
                   Delete
                 </Button>
               </div>
@@ -459,13 +791,36 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
                     <Badge active={!!it.isActive} />
                   </div>
                   <div className="flex gap-2 ml-4 flex-wrap">
-                    <Button onClick={(e) => { e.stopPropagation(); toggleActive(it._id); }} variant="secondary" size="sm">
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleActive(it._id);
+                      }}
+                      variant="secondary"
+                      size="sm"
+                    >
                       Toggle
                     </Button>
-                    <Button onClick={(e) => { e.stopPropagation(); startEdit(it); }} variant="outline" size="sm" icon={<Pencil className="w-3 h-3" />}>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        startEdit(it);
+                      }}
+                      variant="outline"
+                      size="sm"
+                      icon={<Pencil className="w-3 h-3" />}
+                    >
                       Edit
                     </Button>
-                    <Button onClick={(e) => { e.stopPropagation(); deleteItem(it._id); }} variant="danger" size="sm" icon={<Trash2 className="w-3 h-3" />}>
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteItem(it._id);
+                      }}
+                      variant="danger"
+                      size="sm"
+                      icon={<Trash2 className="w-3 h-3" />}
+                    >
                       Delete
                     </Button>
                   </div>
@@ -476,7 +831,6 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
         </Card>
       )}
 
-      {/* Selected Therapy Details */}
       {selectedTherapyId && (
         <Card className="p-6 bg-gradient-to-br from-blue-50 to-purple-50 border-2 border-blue-200">
           <div className="flex items-center justify-between mb-4">
@@ -498,12 +852,13 @@ function TherapiesView({ selectedTherapyId, onSelectTherapy }) {
 }
 
 /* ========================================================================
-   CHILD VIEW: SubTherapiesView (CRUD with its own therapy selector)
+   CHILD VIEW: SubTherapiesView (CRUD + discount slabs array)
 ==========================================================================*/
 function SubTherapiesView() {
-  const [selectedTherapyId, setSelectedTherapyId] = useState(null);
-  const [items, setItems] = useState([]);
+  const [selectedTherapyId, setSelectedTherapyId] = useState<string | null>(null);
+  const [items, setItems] = useState<SubTherapy[]>([]);
   const [loading, setLoading] = useState(false);
+
   const [form, setForm] = useState({
     name: "",
     duration_mins: "",
@@ -511,13 +866,17 @@ function SubTherapiesView() {
     notes: "",
     isActive: true,
   });
-  const [editing, setEditing] = useState(null);
+
+  const [discountSlabs, setDiscountSlabs] = useState<DiscountSlabDraft[]>([]);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const fetchItems = async () => {
     if (!selectedTherapyId) return;
     setLoading(true);
     try {
-      const res = await api.get(`/therapies/${selectedTherapyId}/subtherapies`, { params: { limit: 200 } });
+      const res = await api.get(`/therapies/${selectedTherapyId}/subtherapies`, {
+        params: { limit: 200 },
+      });
       setItems(res.data.items || []);
     } catch (e) {
       console.error(e);
@@ -536,6 +895,7 @@ function SubTherapiesView() {
       notes: "",
       isActive: true,
     });
+    setDiscountSlabs([]);
     fetchItems();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTherapyId]);
@@ -549,37 +909,44 @@ function SubTherapiesView() {
       notes: "",
       isActive: true,
     });
+    setDiscountSlabs([]);
   };
 
   const createItem = async () => {
     if (!selectedTherapyId || !form.name.trim()) return;
+
     await api.post(`/therapies/${selectedTherapyId}/subtherapies`, {
       ...form,
       duration_mins: num(form.duration_mins),
       price_per_session: num(form.price_per_session),
+      discountSlabs: sanitizeSlabs(discountSlabs),
     });
+
     resetForm();
     fetchItems();
   };
 
   const updateItem = async () => {
     if (!editing) return;
+
     await api.patch(`/subtherapies/${editing}`, {
       ...form,
       duration_mins: num(form.duration_mins),
       price_per_session: num(form.price_per_session),
+      discountSlabs: sanitizeSlabs(discountSlabs),
     });
+
     resetForm();
     fetchItems();
   };
 
-  const deleteItem = async (id) => {
+  const deleteItem = async (id: string) => {
     if (!window.confirm("Delete sub-therapy?")) return;
     await api.delete(`/subtherapies/${id}`, { params: { force: true } });
     fetchItems();
   };
 
-  const startEdit = (it) => {
+  const startEdit = (it: SubTherapy) => {
     setEditing(it._id);
     setForm({
       name: it.name || "",
@@ -588,11 +955,13 @@ function SubTherapiesView() {
       notes: it.notes || "",
       isActive: !!it.isActive,
     });
+
+    // ✅ load slabs into editor
+    setDiscountSlabs(toDraftSlabs(it.discountSlabs));
   };
 
   return (
     <div className="space-y-6">
-      {/* Therapy Selector */}
       <Card className="p-6 border-2 border-purple-100 bg-gradient-to-br from-purple-50/50 to-white">
         <TherapySelector
           selectedTherapyId={selectedTherapyId}
@@ -619,6 +988,7 @@ function SubTherapiesView() {
               <Plus className="w-5 h-5" />
               {editing ? "Edit Sub-therapy" : "Create New Sub-therapy"}
             </h3>
+
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               <div className="md:col-span-2">
                 <Input
@@ -628,20 +998,23 @@ function SubTherapiesView() {
                   placeholder="Enter name"
                 />
               </div>
+
               <NumberInput
                 label="Duration (mins)"
                 value={form.duration_mins}
-                onChange={(v) => setForm((f) => ({ ...f, duration_mins: v }))}
+                onChange={(v: string) => setForm((f) => ({ ...f, duration_mins: v }))}
                 min={1}
                 icon={<Timer className="w-4 h-4" />}
               />
+
               <NumberInput
                 label="Price/Session (₹)"
                 value={form.price_per_session}
-                onChange={(v) => setForm((f) => ({ ...f, price_per_session: v }))}
+                onChange={(v: string) => setForm((f) => ({ ...f, price_per_session: v }))}
                 min={0}
                 placeholder="0.00"
               />
+
               <div className="md:col-span-2">
                 <Input
                   label="Notes"
@@ -650,6 +1023,7 @@ function SubTherapiesView() {
                   placeholder="Additional notes"
                 />
               </div>
+
               <div className="flex items-end gap-3 md:col-span-2">
                 <Toggle
                   checked={form.isActive}
@@ -666,11 +1040,21 @@ function SubTherapiesView() {
                     </Button>
                   </>
                 ) : (
-                  <Button onClick={createItem} variant="success" className="flex-1" icon={<Plus className="w-4 h-4" />}>
+                  <Button
+                    onClick={createItem}
+                    variant="success"
+                    className="flex-1"
+                    icon={<Plus className="w-4 h-4" />}
+                  >
                     Create
                   </Button>
                 )}
               </div>
+            </div>
+
+            {/* ✅ Discount Slabs Editor */}
+            <div className="mt-6">
+              <DiscountSlabsEditor slabs={discountSlabs} setSlabs={setDiscountSlabs} />
             </div>
           </Card>
 
@@ -698,7 +1082,12 @@ function SubTherapiesView() {
                       <Badge active={!!it.isActive} />
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={() => startEdit(it)} variant="outline" size="sm" icon={<Pencil className="w-3 h-3" />}>
+                      <Button
+                        onClick={() => startEdit(it)}
+                        variant="outline"
+                        size="sm"
+                        icon={<Pencil className="w-3 h-3" />}
+                      >
                         Edit
                       </Button>
                       <Button
@@ -711,6 +1100,7 @@ function SubTherapiesView() {
                       </Button>
                     </div>
                   </div>
+
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Duration:</span>
@@ -720,12 +1110,51 @@ function SubTherapiesView() {
                       <span className="text-gray-600">Price/Session:</span>
                       <span className="font-semibold text-gray-800">₹{it.price_per_session ?? "—"}</span>
                     </div>
+
                     {it.notes && (
                       <div className="pt-2 border-t border-gray-100">
                         <span className="text-gray-600 text-xs">Notes: </span>
                         <span className="text-gray-700 text-xs">{it.notes}</span>
                       </div>
                     )}
+
+                    {/* ✅ Slabs display */}
+                    <div className="pt-3 border-t border-gray-100">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs font-extrabold text-gray-800 flex items-center gap-2">
+                          <Percent className="w-4 h-4 text-indigo-600" />
+                          Discount Slabs
+                        </div>
+                        <span className="text-xs text-gray-500">
+                          {(it.discountSlabs?.length ?? 0) > 0
+                            ? `${it.discountSlabs?.length} slab(s)`
+                            : "None"}
+                        </span>
+                      </div>
+
+                      {(it.discountSlabs?.length ?? 0) === 0 ? (
+                        <div className="text-xs text-gray-500">No discount slabs added.</div>
+                      ) : (
+                        <div className="space-y-2">
+                          {it.discountSlabs!.map((s, idx) => (
+                            <div
+                              key={idx}
+                              className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 px-3 py-2"
+                            >
+                              <div className="text-xs font-bold text-gray-800">
+                                {s.min_sessions ?? "—"}–{s.max_sessions ?? "—"} sessions
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-xs font-extrabold text-indigo-700">
+                                  {s.discount_percent ?? "—"}%
+                                </span>
+                                <Badge active={!!s.isActive} />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </Card>
               ))}
@@ -741,8 +1170,8 @@ function SubTherapiesView() {
    CHILD VIEW: TestsView (CRUD with its own therapy selector)
 ==========================================================================*/
 function TestsView() {
-  const [selectedTherapyId, setSelectedTherapyId] = useState(null);
-  const [items, setItems] = useState([]);
+  const [selectedTherapyId, setSelectedTherapyId] = useState<string | null>(null);
+  const [items, setItems] = useState<TestItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
     name: "",
@@ -750,7 +1179,7 @@ function TestsView() {
     price_per_test: "",
     isActive: true,
   });
-  const [editing, setEditing] = useState(null);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const fetchItems = async () => {
     if (!selectedTherapyId) return;
@@ -800,13 +1229,13 @@ function TestsView() {
     fetchItems();
   };
 
-  const deleteItem = async (id) => {
+  const deleteItem = async (id: string) => {
     if (!window.confirm("Delete test?")) return;
     await api.delete(`/tests/${id}`, { params: { force: true } });
     fetchItems();
   };
 
-  const startEdit = (it) => {
+  const startEdit = (it: TestItem) => {
     setEditing(it._id);
     setForm({
       name: it.name || "",
@@ -818,7 +1247,6 @@ function TestsView() {
 
   return (
     <div className="space-y-6">
-      {/* Therapy Selector */}
       <Card className="p-6 border-2 border-emerald-100 bg-gradient-to-br from-emerald-50/50 to-white">
         <TherapySelector
           selectedTherapyId={selectedTherapyId}
@@ -839,7 +1267,6 @@ function TestsView() {
         </Card>
       ) : (
         <>
-          {/* Form */}
           <Card className="p-6 border-2 border-green-100 bg-gradient-to-br from-green-50/50 to-white">
             <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
               <Plus className="w-5 h-5" />
@@ -857,14 +1284,14 @@ function TestsView() {
               <NumberInput
                 label="Duration (mins)"
                 value={form.duration_mins}
-                onChange={(v) => setForm((f) => ({ ...f, duration_mins: v }))}
+                onChange={(v: string) => setForm((f) => ({ ...f, duration_mins: v }))}
                 min={1}
                 icon={<Timer className="w-4 h-4" />}
               />
               <NumberInput
                 label="Price/Test (₹)"
                 value={form.price_per_test}
-                onChange={(v) => setForm((f) => ({ ...f, price_per_test: v }))}
+                onChange={(v: string) => setForm((f) => ({ ...f, price_per_test: v }))}
                 min={0}
                 placeholder="0.00"
               />
@@ -884,7 +1311,12 @@ function TestsView() {
                     </Button>
                   </>
                 ) : (
-                  <Button onClick={createItem} variant="success" className="flex-1" icon={<Plus className="w-4 h-4" />}>
+                  <Button
+                    onClick={createItem}
+                    variant="success"
+                    className="flex-1"
+                    icon={<Plus className="w-4 h-4" />}
+                  >
                     Create
                   </Button>
                 )}
@@ -892,7 +1324,6 @@ function TestsView() {
             </div>
           </Card>
 
-          {/* Items */}
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20" aria-busy>
               <RefreshCw className="w-12 h-12 text-green-500 animate-spin mb-4" />
@@ -916,7 +1347,12 @@ function TestsView() {
                       <Badge active={!!it.isActive} />
                     </div>
                     <div className="flex gap-2">
-                      <Button onClick={() => startEdit(it)} variant="outline" size="sm" icon={<Pencil className="w-3 h-3" />}>
+                      <Button
+                        onClick={() => startEdit(it)}
+                        variant="outline"
+                        size="sm"
+                        icon={<Pencil className="w-3 h-3" />}
+                      >
                         Edit
                       </Button>
                       <Button
@@ -936,7 +1372,7 @@ function TestsView() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Price:</span>
-                      <span className="font-semibold text-gray-800">₹{it.price_per_test}</span>
+                      <span className="font-semibold text-gray-800">₹{it.price_per_test ?? "—"}</span>
                     </div>
                   </div>
                 </Card>
@@ -950,16 +1386,21 @@ function TestsView() {
 }
 
 /* ========================================================================
-   COMPONENT 1: TherapyCatalogContent (tabs + rendering of child views)
+   COMPONENT: TherapyCatalogContent
 ==========================================================================*/
-export function TherapyCatalogContent({ activeTab, selectedTherapyId, onSelectTherapy }) {
+export function TherapyCatalogContent({
+  activeTab,
+  selectedTherapyId,
+  onSelectTherapy,
+}: {
+  activeTab: "therapies" | "subtherapies" | "tests";
+  selectedTherapyId: string | null;
+  onSelectTherapy: (id: string | null) => void;
+}) {
   return (
     <div>
       {activeTab === "therapies" && (
-        <TherapiesView
-          selectedTherapyId={selectedTherapyId}
-          onSelectTherapy={onSelectTherapy}
-        />
+        <TherapiesView selectedTherapyId={selectedTherapyId} onSelectTherapy={onSelectTherapy} />
       )}
       {activeTab === "subtherapies" && <SubTherapiesView />}
       {activeTab === "tests" && <TestsView />}

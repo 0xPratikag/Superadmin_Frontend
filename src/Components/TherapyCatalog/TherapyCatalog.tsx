@@ -1,13 +1,5 @@
-// TherapyCatalog.tsx
 import React, { useState } from "react";
-import {
-  Stethoscope,
-  Blocks,
-  TestTube,
-  Filter,
-  Download,
-  Settings,
-} from "lucide-react";
+import { Stethoscope, Blocks, TestTube, Filter, Download, Settings } from "lucide-react";
 import { TherapyCatalogContent, Button } from "./CatalogPanels";
 
 export default function TherapyCatalog() {
@@ -21,7 +13,7 @@ export default function TherapyCatalog() {
   ] as const;
 
   return (
-      <div className="w-full min-h-screen bg-slate-50/80 p-6">
+    <div className="w-full min-h-screen bg-slate-50/80 p-6">
       <div className="max-w-[1400px] mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white rounded-3xl shadow-xl p-6 border border-gray-200">
@@ -36,9 +28,15 @@ export default function TherapyCatalog() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" icon={<Filter className="w-4 h-4" />}>Filter</Button>
-              <Button variant="outline" size="sm" icon={<Download className="w-4 h-4" />}>Export</Button>
-              <Button variant="outline" size="sm" icon={<Settings className="w-4 h-4" />}>Settings</Button>
+              <Button variant="outline" size="sm" icon={<Filter className="w-4 h-4" />}>
+                Filter
+              </Button>
+              <Button variant="outline" size="sm" icon={<Download className="w-4 h-4" />}>
+                Export
+              </Button>
+              <Button variant="outline" size="sm" icon={<Settings className="w-4 h-4" />}>
+                Settings
+              </Button>
             </div>
           </div>
         </div>
