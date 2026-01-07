@@ -508,8 +508,6 @@ function SubTherapiesView() {
     name: "",
     duration_mins: "",
     price_per_session: "",
-    price_per_package: "",
-    default_sessions_per_package: 1,
     notes: "",
     isActive: true,
   });
@@ -535,8 +533,6 @@ function SubTherapiesView() {
       name: "",
       duration_mins: "",
       price_per_session: "",
-      price_per_package: "",
-      default_sessions_per_package: 1,
       notes: "",
       isActive: true,
     });
@@ -550,8 +546,6 @@ function SubTherapiesView() {
       name: "",
       duration_mins: "",
       price_per_session: "",
-      price_per_package: "",
-      default_sessions_per_package: 1,
       notes: "",
       isActive: true,
     });
@@ -563,8 +557,6 @@ function SubTherapiesView() {
       ...form,
       duration_mins: num(form.duration_mins),
       price_per_session: num(form.price_per_session),
-      price_per_package: num(form.price_per_package),
-      default_sessions_per_package: Number(form.default_sessions_per_package || 1),
     });
     resetForm();
     fetchItems();
@@ -576,8 +568,6 @@ function SubTherapiesView() {
       ...form,
       duration_mins: num(form.duration_mins),
       price_per_session: num(form.price_per_session),
-      price_per_package: num(form.price_per_package),
-      default_sessions_per_package: Number(form.default_sessions_per_package || 1),
     });
     resetForm();
     fetchItems();
@@ -595,8 +585,6 @@ function SubTherapiesView() {
       name: it.name || "",
       duration_mins: it.duration_mins ?? "",
       price_per_session: it.price_per_session ?? "",
-      price_per_package: it.price_per_package ?? "",
-      default_sessions_per_package: it.default_sessions_per_package ?? 1,
       notes: it.notes || "",
       isActive: !!it.isActive,
     });
@@ -653,19 +641,6 @@ function SubTherapiesView() {
                 onChange={(v) => setForm((f) => ({ ...f, price_per_session: v }))}
                 min={0}
                 placeholder="0.00"
-              />
-              <NumberInput
-                label="Price/Package (₹)"
-                value={form.price_per_package}
-                onChange={(v) => setForm((f) => ({ ...f, price_per_package: v }))}
-                min={0}
-                placeholder="0.00"
-              />
-              <NumberInput
-                label="Sessions/Package"
-                value={form.default_sessions_per_package}
-                onChange={(v) => setForm((f) => ({ ...f, default_sessions_per_package: v }))}
-                min={1}
               />
               <div className="md:col-span-2">
                 <Input
@@ -744,14 +719,6 @@ function SubTherapiesView() {
                     <div className="flex justify-between">
                       <span className="text-gray-600">Price/Session:</span>
                       <span className="font-semibold text-gray-800">₹{it.price_per_session ?? "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Price/Package:</span>
-                      <span className="font-semibold text-gray-800">₹{it.price_per_package ?? "—"}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Sessions/Package:</span>
-                      <span className="font-semibold text-gray-800">{it.default_sessions_per_package ?? "—"}</span>
                     </div>
                     {it.notes && (
                       <div className="pt-2 border-t border-gray-100">

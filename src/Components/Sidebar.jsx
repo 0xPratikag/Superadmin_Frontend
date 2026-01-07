@@ -14,6 +14,7 @@ import {
   Search,
   X,
   Stethoscope,
+  Percent,
 } from "lucide-react";
 
 /* ---------- MENU STRUCTURE (unchanged data, same routes/icons) ---------- */
@@ -89,20 +90,29 @@ const modules = [
   },
 
 
-  {
-      key: "catalog",
-      name: "Catalog",
-      path: "/",
-      icon: <Stethoscope className="w-5 h-5" />,
-      children: [
-        {
-          key: "therapy_catalog",
-          name: "Therapy Catalog",
-          path: "/therapy-catalog",
-          icon: <Stethoscope className="w-4 h-4" />,
-        },
-      ],
+{
+  key: "catalog",
+  name: "Catalog",
+  path: "/",
+  icon: <Stethoscope className="w-5 h-5" />,
+  children: [
+    {
+      key: "therapy_catalog",
+      name: "Therapy Catalog",
+      path: "/therapy-catalog",
+      icon: <Stethoscope className="w-4 h-4" />,
     },
+    {
+      key: "discount_rules",
+      name: "Discount Rule",
+      path: "/discount-rules",
+      icon: <Percent className="w-4 h-4" />, // ✅ best default
+      // alternatives:
+      // icon: <Tag className="w-4 h-4" />,
+      // icon: <BadgePercent className="w-4 h-4" />,
+    },
+  ],
+},
 
 
 
