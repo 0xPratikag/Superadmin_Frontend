@@ -303,6 +303,7 @@ export default function EmployeeEdit() {
                   Employee ID <span className="text-rose-500">*</span>
                 </label>
                 <input
+                disabled
                   type="text"
                   className={inputBase}
                   {...register("EmployeId")}
@@ -319,6 +320,7 @@ export default function EmployeeEdit() {
                   Full Name <span className="text-rose-500">*</span>
                 </label>
                 <input
+                         disabled
                   type="text"
                   className={inputBase}
                   {...register("name")}
@@ -427,7 +429,8 @@ export default function EmployeeEdit() {
                   name="branch"
                   render={({ field }) => (
                     <Select
-                      options={branchOptions}
+                             disabled
+                      // options={branchOptions}
                       value={
                         field.value
                           ? branchOptions.find(
@@ -435,13 +438,14 @@ export default function EmployeeEdit() {
                             )
                           : null
                       }
-                      onChange={(opt) => field.onChange(opt?.value || "")}
+                      // onChange={(opt) => field.onChange(opt?.value || "")}
                       classNamePrefix="react-select"
                       placeholder="Select branch"
                       isClearable={false}
                     />
                   )}
                 />
+                not editable
                 {errorText(errors.branch?.message)}
               </div>
 

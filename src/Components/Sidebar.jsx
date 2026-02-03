@@ -102,15 +102,7 @@ const modules = [
       path: "/therapy-catalog",
       icon: <Stethoscope className="w-4 h-4" />,
     },
-    {
-      key: "discount_rules",
-      name: "Discount Rule",
-      path: "/discount-rules",
-      icon: <Percent className="w-4 h-4" />, // ✅ best default
-      // alternatives:
-      // icon: <Tag className="w-4 h-4" />,
-      // icon: <BadgePercent className="w-4 h-4" />,
-    },
+   
   ],
 },
 

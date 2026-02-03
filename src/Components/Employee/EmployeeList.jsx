@@ -15,6 +15,8 @@ import {
   ToggleLeft,
   ToggleRight,
   RefreshCw,
+  AlertTriangle,
+  X,
 } from "lucide-react";
 import { toast } from "react-toastify";
 import Select from "react-select";
@@ -42,29 +44,32 @@ export default function EmployeeList() {
   const [selectedBranch, setSelectedBranch] = useState(null);
   const [statusFilter, setStatusFilter] = useState("all"); // all | active | inactive
 
+  // ✅ Delete confirmation modal state
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+
   const token = localStorage.getItem("token");
 
-  const axiosAuth = axios.create({
-    baseURL: API_BASE,
-    headers: { Authorization: `Bearer ${token}` },
-  });
+  const axiosAuth = useMemo(() => {
+    return axios.create({
+      baseURL: API_BASE,
+      headers: { Authorization: `Bearer ${token}` },
+    });
+  }, [token]);
 
   const fetchEmployees = async () => {
     setLoading(true);
     try {
       const res = await axiosAuth.get("/getEmployees", {
-        params: {
-          // basic server-side pagination support
-          page: 1,
-          limit: 1000,
-        },
+        params: { page: 1, limit: 1000 },
       });
 
       const data = res.data?.data || res.data || [];
       setEmployees(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to fetch employees");
+      toast.error("Failed to fetch employees.");
     } finally {
       setLoading(false);
     }
@@ -77,19 +82,50 @@ export default function EmployeeList() {
       setBranches(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error(err);
-      // branch fetch fail is not critical, so no toast
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this employee?")) return;
+  useEffect(() => {
+    fetchEmployees();
+    fetchBranches();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // ✅ open confirm popup
+  const openDeleteConfirm = (employee) => {
+    setDeleteTarget(employee);
+    setDeleteOpen(true);
+  };
+
+  const closeDeleteConfirm = () => {
+    if (deleting) return;
+    setDeleteOpen(false);
+    setDeleteTarget(null);
+  };
+
+  // ✅ delete after confirm
+  const confirmDelete = async () => {
+    if (!deleteTarget?._id) return;
+
+    setDeleting(true);
     try {
-      await axiosAuth.delete(`/deleteEmployee/${id}`);
-      toast.success("Employee deleted");
-      fetchEmployees();
+      await axiosAuth.delete(`/deleteEmployee/${deleteTarget._id}`);
+
+      toast.success(
+        `Employee "${deleteTarget.name}" has been deleted successfully.`
+      );
+
+      // Optimistic update (no full refetch needed, but we also refetch for safety)
+      setEmployees((prev) => prev.filter((e) => e._id !== deleteTarget._id));
+
+      closeDeleteConfirm();
+      // Optional: refetch if your backend also updates related data
+      // await fetchEmployees();
     } catch (err) {
       console.error(err);
-      toast.error(err?.response?.data?.message || "Failed to delete employee");
+      toast.error(err?.response?.data?.message || "Failed to delete employee.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -100,7 +136,7 @@ export default function EmployeeList() {
         isActive: newStatus,
       });
       toast.success(
-        `Employee ${newStatus ? "activated" : "deactivated"} successfully`
+        `Employee ${newStatus ? "activated" : "deactivated"} successfully.`
       );
       setEmployees((prev) =>
         prev.map((emp) =>
@@ -109,15 +145,9 @@ export default function EmployeeList() {
       );
     } catch (err) {
       console.error(err);
-      toast.error("Failed to update status");
+      toast.error("Failed to update status.");
     }
   };
-
-  useEffect(() => {
-    fetchEmployees();
-    fetchBranches();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   /* ========== FILTERED DATA ========== */
 
@@ -127,8 +157,7 @@ export default function EmployeeList() {
     if (searchText.trim()) {
       const t = searchText.toLowerCase();
       data = data.filter((emp) => {
-        const branchName =
-          emp.branch?.Branch_name || emp.branch?.name || "";
+        const branchName = emp.branch?.Branch_name || emp.branch?.name || "";
         return (
           emp.name?.toLowerCase().includes(t) ||
           emp.email?.toLowerCase().includes(t) ||
@@ -140,9 +169,7 @@ export default function EmployeeList() {
     }
 
     if (selectedBranch) {
-      data = data.filter(
-        (emp) => emp.branch?._id === selectedBranch.value
-      );
+      data = data.filter((emp) => emp.branch?._id === selectedBranch.value);
     }
 
     if (statusFilter !== "all") {
@@ -153,7 +180,7 @@ export default function EmployeeList() {
     return data;
   }, [employees, searchText, selectedBranch, statusFilter]);
 
-  /* ========== RECHARTS DATA ========== */
+  /* ========== CHARTS DATA ========== */
 
   const statusChartData = useMemo(() => {
     const active = employees.filter((e) => e.isActive).length;
@@ -167,14 +194,10 @@ export default function EmployeeList() {
   const branchChartData = useMemo(() => {
     const map = new Map();
     employees.forEach((e) => {
-      const name =
-        e.branch?.Branch_name || e.branch?.name || "Unassigned";
+      const name = e.branch?.Branch_name || e.branch?.name || "Unassigned";
       map.set(name, (map.get(name) || 0) + 1);
     });
-    return Array.from(map.entries()).map(([name, count]) => ({
-      name,
-      count,
-    }));
+    return Array.from(map.entries()).map(([name, count]) => ({ name, count }));
   }, [employees]);
 
   const COLORS = ["#22c55e", "#ef4444", "#6366f1", "#0ea5e9", "#f97316"];
@@ -196,9 +219,7 @@ export default function EmployeeList() {
             <span className="text-[13px] font-semibold text-slate-900">
               {row.name}
             </span>
-            <span className="text-[11px] text-slate-500">
-              {row.email}
-            </span>
+            <span className="text-[11px] text-slate-500">{row.email}</span>
             <span className="text-[11px] text-slate-400">
               ID: {row.EmployeId}
             </span>
@@ -220,10 +241,7 @@ export default function EmployeeList() {
     },
     {
       name: "Branch",
-      selector: (row) =>
-        row.branch?.Branch_name ||
-        row.branch?.name ||
-        "",
+      selector: (row) => row.branch?.Branch_name || row.branch?.name || "",
       sortable: true,
       minWidth: "180px",
       cell: (row) => (
@@ -246,9 +264,7 @@ export default function EmployeeList() {
       sortable: true,
       center: true,
       cell: (row) => (
-        <span className="text-[13px] text-slate-700">
-          {row.machineEmpId}
-        </span>
+        <span className="text-[13px] text-slate-700">{row.machineEmpId}</span>
       ),
     },
     {
@@ -272,6 +288,7 @@ export default function EmployeeList() {
             />
             {row.isActive ? "Active" : "Inactive"}
           </span>
+
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -307,7 +324,7 @@ export default function EmployeeList() {
           <button
             onClick={(e) => {
               e.stopPropagation();
-              handleDelete(row._id);
+              openDeleteConfirm(row);
             }}
             className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-rose-100 text-rose-700 hover:bg-rose-200"
             title="Delete employee"
@@ -359,8 +376,6 @@ export default function EmployeeList() {
     },
   };
 
-  /* ========== UI ========== */
-
   const branchOptions = branches.map((b) => ({
     value: b._id,
     label: b.Branch_name || b.name || "Unnamed branch",
@@ -376,11 +391,9 @@ export default function EmployeeList() {
               <Users2 className="h-6 w-6" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                Employees
-              </h1>
+              <h1 className="text-2xl font-bold text-slate-900">Employees</h1>
               <p className="text-sm text-slate-500">
-                Manage employee records, roles, branches and status.
+                Manage employee records, roles, branches, and status.
               </p>
             </div>
           </div>
@@ -402,7 +415,7 @@ export default function EmployeeList() {
           </div>
         </div>
 
-        {/* Stats + charts */}
+        {/* Stats */}
         <div className="grid gap-4 md:grid-cols-3">
           <div className="rounded-2xl border border-slate-200 bg-white p-4 flex items-center gap-3">
             <div className="h-10 w-10 rounded-xl bg-indigo-50 flex items-center justify-center text-indigo-600">
@@ -410,9 +423,7 @@ export default function EmployeeList() {
             </div>
             <div>
               <p className="text-xs text-slate-500">Total Employees</p>
-              <p className="text-xl font-semibold text-slate-900">
-                {employees.length}
-              </p>
+              <p className="text-xl font-semibold text-slate-900">{employees.length}</p>
             </div>
           </div>
 
@@ -441,23 +452,17 @@ export default function EmployeeList() {
                 {
                   new Set(
                     employees
-                      .map(
-                        (e) =>
-                          e.branch?._id ||
-                          (e.branch ? JSON.stringify(e.branch) : "")
-                      )
+                      .map((e) => e.branch?._id || (e.branch ? JSON.stringify(e.branch) : ""))
                       .filter(Boolean)
                   ).size
                 }
               </p>
-              <p className="text-[11px] text-slate-400">
-                Based on mapped branch
-              </p>
+              <p className="text-[11px] text-slate-400">Based on mapped branch</p>
             </div>
           </div>
         </div>
 
-        {/* Charts row */}
+        {/* Charts */}
         <div className="grid gap-4 lg:grid-cols-2">
           <div className="rounded-2xl border border-slate-200 bg-white p-4">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-400 mb-2">
@@ -473,18 +478,12 @@ export default function EmployeeList() {
                     cx="50%"
                     cy="50%"
                     outerRadius={60}
-                    label={(entry) =>
-                      `${entry.name} (${entry.value})`
-                    }
+                    label={(entry) => `${entry.name} (${entry.value})`}
                   >
                     {statusChartData.map((entry, index) => (
                       <Cell
                         key={`cell-${index}`}
-                        fill={
-                          entry.name === "Active"
-                            ? "#22c55e"
-                            : "#ef4444"
-                        }
+                        fill={entry.name === "Active" ? "#22c55e" : "#ef4444"}
                       />
                     ))}
                   </Pie>
@@ -524,15 +523,11 @@ export default function EmployeeList() {
           <div className="flex flex-wrap items-center gap-2 text-xs">
             <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-slate-600 shadow-sm border border-slate-200">
               Total:{" "}
-              <span className="font-semibold text-slate-900">
-                {employees.length}
-              </span>
+              <span className="font-semibold text-slate-900">{employees.length}</span>
             </span>
             <span className="inline-flex items-center gap-1 rounded-full bg-white px-3 py-1 text-emerald-700 shadow-sm border border-emerald-100">
               Active:{" "}
-              <span className="font-semibold">
-                {employees.filter((e) => e.isActive).length}
-              </span>
+              <span className="font-semibold">{employees.filter((e) => e.isActive).length}</span>
             </span>
           </div>
 
@@ -602,6 +597,87 @@ export default function EmployeeList() {
           />
         </div>
       </div>
+
+      {/* ✅ Delete Confirmation Modal */}
+      {deleteOpen && deleteTarget && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
+          role="dialog"
+          aria-modal="true"
+          onMouseDown={(e) => {
+            // click outside closes
+            if (e.target === e.currentTarget) closeDeleteConfirm();
+          }}
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-xl border border-slate-200 overflow-hidden">
+            <div className="flex items-start justify-between gap-3 px-5 py-4 border-b border-slate-100">
+              <div className="flex items-start gap-3">
+                <div className="mt-0.5 h-9 w-9 rounded-xl bg-rose-50 flex items-center justify-center text-rose-600">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-slate-900">
+                    Delete employee?
+                  </p>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    This action will delete the employee from the database and also attempt to remove them from the biometric device.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                disabled={deleting}
+                className="text-slate-400 hover:text-slate-700 disabled:opacity-60"
+                title="Close"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <div className="px-5 py-4 space-y-3">
+              <div className="rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <p className="text-xs text-slate-500">Employee</p>
+                <p className="text-sm font-semibold text-slate-900">
+                  {deleteTarget.name}
+                </p>
+                <p className="text-xs text-slate-500">
+                  {deleteTarget.email}
+                </p>
+                <p className="text-xs text-slate-400">
+                  Employee ID: {deleteTarget.EmployeId} • Machine ID: {deleteTarget.machineEmpId}
+                </p>
+              </div>
+
+              <p className="text-xs text-rose-600">
+                Please confirm to permanently delete this employee.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 px-5 py-4 border-t border-slate-100 bg-white">
+              <button
+                type="button"
+                onClick={closeDeleteConfirm}
+                disabled={deleting}
+                className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+              >
+                Cancel
+              </button>
+
+              <button
+                type="button"
+                onClick={confirmDelete}
+                disabled={deleting}
+                className="inline-flex items-center gap-2 rounded-lg bg-rose-600 px-4 py-2 text-xs font-semibold text-white hover:bg-rose-700 disabled:opacity-60"
+              >
+                <Trash2 className="h-4 w-4" />
+                {deleting ? "Deleting..." : "Yes, Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
